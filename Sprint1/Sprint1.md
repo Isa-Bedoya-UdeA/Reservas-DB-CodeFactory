@@ -9,3 +9,7 @@
     * [Diagrama MER](./03_MERLogico.png)
 4. Crear modelo físico con columnas y clave primaria (acorde al alcance definido por el Product Owner).
     * [Documento con módelo físico](./04_Modelo_Fisico_Tablas.pdf)
+
+## Próximamente
+
+Se hará cambio de arquitectura monolito a microservicios.
