@@ -16,3 +16,7 @@
 
 * Juan Felipe Martinez Patiño
 * Isabela Bedoya Gaviria
+
+## Notas
+
+En este repositorio se encontrarán ordenadas las entregas por carpetas que corresponden a cada sprint. En cada una hay un archivo `.md` con indicaciones sobre cada entrega del sprint y sus enlaces directos.
