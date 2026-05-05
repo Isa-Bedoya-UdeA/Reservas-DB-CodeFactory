@@ -5,6 +5,7 @@
 ### Paso 1: Calcular la longitud estimada del registro (L)
 
 **Fórmula:**
+
 $$
 L = 4 \times (\#\ cam\_var) + \sum size(campos\_fijos) + size(mapa\_bits) + \sum t
 $$
@@ -37,6 +38,7 @@ Proyectar la cantidad de registros esperados (carga inicial + crecimiento a 5 a�
 ### Paso 4: Calcular el número de páginas y volumen total
 
 **Fórmulas:**
+
 $$
 B_R = \left\lceil \frac{T_R}{F_R} \right\rceil
 $$
@@ -83,6 +85,7 @@ Desglose:
 - Campos variables: 104 (email) + 259 (password_hash) + 24 (estado) + 24 (tipo_usuario) = 411
 
 Total:
+
 $$
 L = 16 + 53 + 1 + 23 + 411 = 504\ bytes
 $$
