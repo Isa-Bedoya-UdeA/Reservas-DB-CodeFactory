@@ -21,5 +21,5 @@
 
 En este repositorio se encontrarán ordenadas las entregas por carpetas que corresponden a cada sprint. En cada una hay un archivo `.md` con indicaciones sobre cada entrega del sprint y sus enlaces directos.
 
-**Sprint 1:** [Guía Sprint1.md](./Sprint1/Sprint1.md)
-**Sprint 2:** [Guía Sprint2.md](./Sprint2/Sprint2.md)
+* **Sprint 1:** [Guía Sprint1.md](./Sprint1/Sprint1.md)
+* **Sprint 2:** [Guía Sprint2.md](./Sprint2/Sprint2.md)
