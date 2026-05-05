@@ -23,6 +23,7 @@ Donde:
 $$
 F_R = \left\lfloor \frac{P - espacio\_control}{L + 4} \right\rfloor
 $$
+
 Donde:
 
 - $P$: Tamaño de página (por defecto 8KB = 8192 bytes en PostgreSQL)
@@ -39,6 +40,7 @@ Proyectar la cantidad de registros esperados (carga inicial + crecimiento a 5 a�
 $$
 B_R = \left\lceil \frac{T_R}{F_R} \right\rceil
 $$
+
 $$
 Volumen\ total = B_R \times P
 $$
@@ -71,6 +73,7 @@ $$
 $$
 L = 4 \times 4 + (16 + 1 + 4 + 8 + 8 + 8 + 8) + 1 + 23 + (104 + 259 + 24 + 24)
 $$
+
 Desglose:
 
 - 4 × 4 = 16 (punteros a campos variables)
@@ -99,6 +102,7 @@ Supongamos: 5,000 usuarios en 5 años
 $$
 B_R = \left\lceil \frac{5000}{15} \right\rceil = 334\ páginas
 $$
+
 $$
 Volumen\ total = 334 \times 8192 = 2,735,  728\ bytes \approx 2.6\ MB
 $$
