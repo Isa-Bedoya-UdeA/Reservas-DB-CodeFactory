@@ -11,7 +11,7 @@ $$
 
 Donde:
 
-- $\text{\# cam\_var}$: Número de campos de longitud variable (VARCHAR, TEXT, etc.)
+- `# cam_var` Número de campos de longitud variable (VARCHAR, TEXT, etc.)
 - $\sum size(campos\_fijos)$: Suma de tamaños de campos de longitud fija (UUID, INT, BOOL, TIMESTAMP, etc.)
 - $size(mapa\_bits)$: 1 bit por cada campo que puede ser NULL (aprox. redondear a 1 byte cada 8 campos)
 - $\sum t$: Overhead de tupla (cabecera, punteros, etc. - en PostgreSQL suele ser 23 bytes)
