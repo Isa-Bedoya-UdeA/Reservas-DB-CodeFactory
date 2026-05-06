@@ -1,7 +1,7 @@
 MS-AUTH-SERVICE
-Tablas: usuario, cliente, proveedor, intento_login, token_refresh
-Q1. Registro de Cliente
-Inserta el usuario base y el perfil de cliente en una transacción. El password_hash debe llegar ya cifrado desde la capa de servicio (bcrypt/argon2).
+--Tablas: usuario, cliente, proveedor, intento_login, token_refresh
+--Q1. Registro de Cliente
+--Inserta el usuario base y el perfil de cliente en una transacción. El password_hash debe llegar ya cifrado desde la capa de servicio (bcrypt/argon2).
 SQL:
 -- PASO 1: Insertar usuario base
 INSERT INTO usuario (
@@ -43,10 +43,9 @@ SELECT
     CURRENT_TIMESTAMP + INTERVAL '24 hours'
 FROM usuario
 WHERE email = 'juan.perez@email.com';
-ℹ️  Ejecutar dentro de un BEGIN / COMMIT para garantizar atomicidad.
 
-Q2. Registro de Proveedor
-Inserta el usuario base y el perfil del proveedor. El id_categoria es una FK lógica hacia MS-CATALOG y debe validarse vía Feign Client antes de ejecutar este INSERT.
+--Q2. Registro de Proveedor
+--Inserta el usuario base y el perfil del proveedor. El id_categoria es una FK lógica hacia MS-CATALOG y debe validarse vía Feign Client antes de ejecutar este INSERT.
 SQL:
 -- PASO 1: Insertar usuario base
 INSERT INTO usuario (
@@ -92,10 +91,9 @@ SELECT
     CURRENT_TIMESTAMP + INTERVAL '24 hours'
 FROM usuario
 WHERE email = 'spa.zen@proveedores.com';
-ℹ️  El campo id_categoria no tiene FK física; la validación cruzada la hace el servicio antes del INSERT.
 
-Q3. Login — Validación de Credenciales
-Obtiene los datos necesarios para que la capa de servicio valide el password_hash (con bcrypt.verify). Si la validación es exitosa, se registra el intento y se crea el token de refresh.
+--Q3. Login — Validación de Credenciales
+--Obtiene los datos necesarios para que la capa de servicio valide el password_hash (con bcrypt.verify). Si la validación es exitosa, se registra el intento y se crea el token de refresh.
 SQL:
 -- PASO 1: Obtener datos del usuario para validación
 SELECT
@@ -147,10 +145,10 @@ INSERT INTO token_refresh (
     'Mozilla/5.0 Chrome/124 ...',
     '190.85.100.45'
 );
-ℹ️  La comparación del hash NUNCA se hace en SQL. El servicio recibe el password_hash y llama a bcrypt.matches() en Java.
 
-Q4. Consulta de Seguridad — Usuarios con Intentos Fallidos Recientes
-Detecta usuarios con 5 o más intentos fallidos en la última hora, útil para trigger de bloqueo automático.
+
+--Q4. Consulta de Seguridad — Usuarios con Intentos Fallidos Recientes
+--Detecta usuarios con 5 o más intentos fallidos en la última hora, útil para trigger de bloqueo automático.
 SQL:
 SELECT
     u.id_usuario,
@@ -171,5 +169,3 @@ GROUP BY
     u.intentos_fallidos, u.bloqueado_hasta
 HAVING COUNT(il.id_intento) >= 5
 ORDER BY intentos_ultima_hora DESC;
-ℹ️  Esta consulta alimenta el job de bloqueo automático. El UPDATE de bloqueo se hace con la función bloquear_usuario_por_intentos(id, horas).
-
