@@ -1,7 +1,7 @@
 MS-SCHEDULE-SERVICE
-Tablas: empleado, empleado_servicio, horario_laboral, bloqueo_horario
-Q1. Crear Empleado (INSERT)
-El proveedor registra un nuevo empleado. El id_proveedor es FK lógica hacia MS-AUTH y debe validarse vía Feign Client antes del INSERT.
+--Tablas: empleado, empleado_servicio, horario_laboral, bloqueo_horario
+--Q1. Crear Empleado (INSERT)
+--El proveedor registra un nuevo empleado. El id_proveedor es FK lógica hacia MS-AUTH y debe validarse vía Feign Client antes del INSERT.
 SQL:
 INSERT INTO empleado (
     id_proveedor,
@@ -19,10 +19,9 @@ INSERT INTO empleado (
     'Especialista en masajes terapéuticos y técnicas orientales'
 )
 RETURNING id_empleado, nombre_completo, activo, created_at;
-ℹ️  El id_proveedor no tiene FK física en este microservicio; la validación cruzada con MS-AUTH se hace desde la capa de servicio.
 
-Q2. Listar Empleados Activos de un Proveedor (SELECT)
-Retorna todos los empleados activos de un proveedor con el conteo de servicios asignados y horarios configurados.
+--Q2. Listar Empleados Activos de un Proveedor (SELECT)
+--Retorna todos los empleados activos de un proveedor con el conteo de servicios asignados y horarios configurados.
 SQL:
 -- Opción A: Query directo con agregaciones
 SELECT
@@ -44,10 +43,9 @@ ORDER BY e.nombre_completo ASC;
  
 -- Opción B: Usando la función del DDL
 SELECT * FROM obtener_empleados_por_proveedor('uuid-del-proveedor', TRUE);
-ℹ️  La vista vista_empleados_activos_por_proveedor también incluye total_bloqueos_futuros para una visión aún más completa.
 
-Q3. Actualizar Empleado (UPDATE)
-Permite modificar los datos de contacto y notas de un empleado. El trigger updated_at se dispara automáticamente.
+--Q3. Actualizar Empleado (UPDATE)
+--Permite modificar los datos de contacto y notas de un empleado. El trigger updated_at se dispara automáticamente.
 SQL:
 UPDATE empleado
 SET
@@ -57,10 +55,9 @@ SET
 WHERE id_empleado  = 'uuid-del-empleado'
   AND id_proveedor = 'uuid-del-proveedor'   -- solo el dueño puede modificar
 RETURNING id_empleado, nombre_completo, telefono, updated_at;
-ℹ️  El filtro AND id_proveedor refuerza la regla de negocio complementando la política RLS del DDL.
 
-Q4. Desactivar / Reactivar Empleado (Soft Delete)
-Marca el empleado como inactivo sin eliminarlo físicamente. Sus horarios y bloqueos asociados quedan intactos.
+--Q4. Desactivar / Reactivar Empleado (Soft Delete)
+--Marca el empleado como inactivo sin eliminarlo físicamente. Sus horarios y bloqueos asociados quedan intactos.
 SQL:
 -- Desactivar
 UPDATE empleado
@@ -74,10 +71,9 @@ SELECT desactivar_empleado('uuid-del-empleado');
  
 -- Reactivar:
 SELECT activar_empleado('uuid-del-empleado');
-ℹ️  Al desactivar un empleado sus bloqueos de RESERVA siguen activos; el servicio debe liberar esas reservas futuras.
 
-Q5. Asignar Servicio a Empleado (INSERT empleado_servicio)
-Relaciona un empleado con un servicio del catálogo. El id_servicio es FK lógica a MS-CATALOG validada vía Feign.
+--Q5. Asignar Servicio a Empleado (INSERT empleado_servicio)
+--Relaciona un empleado con un servicio del catálogo. El id_servicio es FK lógica a MS-CATALOG validada vía Feign.
 SQL:
 -- Opción A: INSERT directo
 INSERT INTO empleado_servicio (
@@ -98,10 +94,9 @@ SELECT asignar_servicio_a_empleado('uuid-del-empleado', 'uuid-del-servicio');
  
 -- Remover asignación (soft delete):
 SELECT remover_servicio_de_empleado('uuid-del-empleado', 'uuid-del-servicio');
-ℹ️  Un empleado puede atender múltiples servicios. La tabla empleado_servicio es la tabla puente N:M.
 
-Q6. Configurar Horario Laboral Semanal (INSERT horario_laboral)
-Define los bloques de trabajo recurrentes de un empleado por día de la semana. Se puede insertar un registro por cada día.
+--Q6. Configurar Horario Laboral Semanal (INSERT horario_laboral)
+--Define los bloques de trabajo recurrentes de un empleado por día de la semana. Se puede insertar un registro por cada día.
 SQL:
 -- Configurar horario de lunes a viernes 8am-6pm y sábados 9am-2pm
 INSERT INTO horario_laboral (id_empleado, dia_semana, hora_inicio, hora_fin, activo)
@@ -122,10 +117,9 @@ SET activo = FALSE
 WHERE id_empleado = 'uuid-del-empleado'
   AND dia_semana  = 'SABADO'
 RETURNING id_horario, dia_semana, activo;
-ℹ️  hora_inicio y hora_fin son de tipo TIME; el constraint chk_horario_laboral_horas_validas garantiza que hora_fin > hora_inicio.
 
-Q7. Crear Bloqueo de Horario (INSERT bloqueo_horario)
-Bloquea un tramo de tiempo específico para un empleado. Las reservas generan bloqueos de tipo RESERVA; los administrativos (vacaciones, permisos) se gestionan directamente.
+--Q7. Crear Bloqueo de Horario (INSERT bloqueo_horario)
+--Bloquea un tramo de tiempo específico para un empleado. Las reservas generan bloqueos de tipo RESERVA; los administrativos (vacaciones, permisos) se gestionan directamente.
 SQL:
 -- Bloqueo por RESERVA (lo crea MS-RESERVATION al confirmar una cita)
 INSERT INTO bloqueo_horario (
@@ -175,10 +169,9 @@ SELECT crear_bloqueo_horario(
     '11:00',
     'RESERVA'
 );
-ℹ️  tipo_bloqueo acepta: RESERVA, VACACIONES, PERMISO, ADMINISTRATIVO.
 
-Q8. Verificar Disponibilidad de un Empleado (SELECT)
-Comprueba si un empleado tiene horario laboral activo y no tiene bloqueos en el tramo solicitado. Usado antes de crear una reserva.
+--Q8. Verificar Disponibilidad de un Empleado (SELECT)
+--Comprueba si un empleado tiene horario laboral activo y no tiene bloqueos en el tramo solicitado. Usado antes de crear una reserva.
 SQL:
 -- Opción A: Usando la función del DDL (recomendado)
 SELECT empleado_disponible_en_fecha(
@@ -209,10 +202,9 @@ WHERE id_empleado = 'uuid-del-empleado'
   AND activo      = TRUE
   AND hora_inicio < '11:00'
   AND hora_fin    > '10:00';  -- solapamiento: inicio_bloqueo < fin_req AND fin_bloqueo > inicio_req
-ℹ️  La función empleado_disponible_en_fecha() del DDL encapsula ambas verificaciones en una sola llamada.
 
-Q9. Agenda del Día de un Empleado (SELECT)
-Retorna todos los bloqueos activos de un empleado para una fecha específica, ordenados por hora. Útil para el panel del proveedor.
+--Q9. Agenda del Día de un Empleado (SELECT)
+--Retorna todos los bloqueos activos de un empleado para una fecha específica, ordenados por hora. Útil para el panel del proveedor.
 SQL:
 SELECT
     bh.hora_inicio,
@@ -240,4 +232,3 @@ WHERE e.id_proveedor = 'uuid-del-proveedor'
   AND bh.fecha       = CURRENT_DATE
   AND bh.activo      = TRUE
 ORDER BY e.nombre_completo, bh.hora_inicio ASC;
-ℹ️  La vista vista_reservas_dia_actual_por_empleado en MS-RESERVATION complementa esta consulta con los datos del cliente.
