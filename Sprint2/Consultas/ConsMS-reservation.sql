@@ -1,7 +1,7 @@
 MS-RESERVATION-SERVICE
-Tablas: reserva
-Q1. Crear Reserva (INSERT)
-El cliente solicita una cita. Antes de insertar, el servicio debe: 1) validar que el servicio existe (MS-CATALOG), 2) confirmar disponibilidad del empleado (MS-SCHEDULE), y 3) verificar que no hay conflicto de horario con la función del DDL.
+--Tablas: reserva
+--Q1. Crear Reserva (INSERT)
+--El cliente solicita una cita. Antes de insertar, el servicio debe: 1) validar que el servicio existe (MS-CATALOG), 2) confirmar disponibilidad del empleado (MS-SCHEDULE), y 3) verificar que no hay conflicto de horario con la función del DDL.
 SQL:
 -- PASO 1: Verificar conflicto de horario (retorna TRUE si hay conflicto)
 SELECT validar_conflicto_horario(
@@ -32,10 +32,9 @@ INSERT INTO reserva (
     'Por favor llegar 5 minutos antes'
 )
 RETURNING id_reserva, estado, fecha_hora_inicio, fecha_creacion;
-ℹ️  Después del INSERT, MS-RESERVATION debe notificar a MS-SCHEDULE para crear el bloqueo_horario correspondiente vía Feign Client.
 
-Q2. Confirmar Reserva — Cambio de Estado (UPDATE)
-El proveedor o el sistema confirma una reserva pendiente. El estado transiciona de PENDIENTE → CONFIRMADA.
+--Q2. Confirmar Reserva — Cambio de Estado (UPDATE)
+--El proveedor o el sistema confirma una reserva pendiente. El estado transiciona de PENDIENTE → CONFIRMADA.
 SQL:
 UPDATE reserva
 SET estado = 'CONFIRMADA'
@@ -48,10 +47,9 @@ RETURNING id_reserva, estado, updated_at;
 -- PENDIENTE → CONFIRMADA → EN_PROGRESO → COMPLETADA
 --                        ↘ CANCELADA
 --                                      ↘ NO_SHOW
-ℹ️  Agregar validación de estado en la capa de servicio para controlar transiciones inválidas (ej: no se puede confirmar una COMPLETADA).
 
-Q3. Cancelar Reserva (UPDATE)
-El cliente o el proveedor cancela una reserva. El trigger actualizar_fecha_cancelacion registra automáticamente la fecha. También libera el bloqueo en MS-SCHEDULE.
+--Q3. Cancelar Reserva (UPDATE)
+--El cliente o el proveedor cancela una reserva. El trigger actualizar_fecha_cancelacion registra automáticamente la fecha. También libera el bloqueo en MS-SCHEDULE.
 SQL:
 -- Opción A: UPDATE directo con comentario de cancelación
 UPDATE reserva
@@ -68,10 +66,9 @@ SELECT cancelar_reserva(
     'uuid-de-la-reserva',
     'Cancelada por el cliente: cambio de planes'
 );
-ℹ️  El trigger trigger_reserva_fecha_cancelacion rellena fecha_cancelacion automáticamente al cambiar estado a CANCELADA. Luego notificar a MS-SCHEDULE para liberar el bloqueo.
 
-Q4. Historial de Reservas de un Cliente (SELECT)
-Devuelve todas las reservas de un cliente ordenadas por fecha descendente. Soporta filtro opcional por estado.
+--Q4. Historial de Reservas de un Cliente (SELECT)
+--Devuelve todas las reservas de un cliente ordenadas por fecha descendente. Soporta filtro opcional por estado.
 SQL:
 -- Todas las reservas del cliente
 SELECT
@@ -96,10 +93,9 @@ SELECT * FROM obtener_reservas_por_cliente('uuid-del-cliente', 'COMPLETADA');
 -- Filtrar activas (PENDIENTE, CONFIRMADA)
 SELECT * FROM vista_reservas_activas
 WHERE id_cliente = 'uuid-del-cliente';
-ℹ️  La función obtener_reservas_por_cliente(uuid, estado) del DDL recibe NULL en el segundo parámetro para traer todas.
 
-Q5. Agenda de Reservas de un Empleado por Rango de Fechas (SELECT)
-Retorna todas las reservas asignadas a un empleado en un período. Útil para el proveedor al planificar la semana.
+--Q5. Agenda de Reservas de un Empleado por Rango de Fechas (SELECT)
+--Retorna todas las reservas asignadas a un empleado en un período. Útil para el proveedor al planificar la semana.
 SQL:
 -- Usando la función del DDL
 SELECT
@@ -121,10 +117,9 @@ WHERE id_empleado = 'uuid-del-empleado';
  
 -- Próximas 24 horas (todas, sin filtro de empleado)
 SELECT * FROM vista_reservas_proximas;
-ℹ️  Para cruzar con datos del cliente o del servicio, el enriquecimiento se hace en la capa de servicio via Feign a MS-AUTH y MS-CATALOG.
 
-Q6. Estadísticas de Reservas por Proveedor (Reporte)
-Reporte gerencial del proveedor: totales por estado y tasa de cancelación para un período dado. Esencial para el dashboard de administración.
+--Q6. Estadísticas de Reservas por Proveedor (Reporte)
+--Reporte gerencial del proveedor: totales por estado y tasa de cancelación para un período dado. Esencial para el dashboard de administración.
 SQL:
 -- Usando la función del DDL con rango de fechas
 SELECT
@@ -153,10 +148,9 @@ SELECT
     ROUND(duracion_promedio_minutos, 0) AS duracion_promedio_min
 FROM vista_estadisticas_reservas_proveedor
 ORDER BY total_reservas DESC;
-ℹ️  La función retorna la tasa_cancelacion como NUMERIC (porcentaje). La vista vista_estadisticas_reservas_proveedor es sin filtro de fechas.
 
-Q7. Validar Conflicto de Horario antes de Reagendar (SELECT)
-Antes de cambiar la fecha/hora de una reserva existente, se verifica que el nuevo tramo no colisione con otras reservas del empleado, excluyendo la reserva actual.
+--Q7. Validar Conflicto de Horario antes de Reagendar (SELECT)
+--Antes de cambiar la fecha/hora de una reserva existente, se verifica que el nuevo tramo no colisione con otras reservas del empleado, excluyendo la reserva actual.
 SQL:
 -- Verificar si hay conflicto para el nuevo horario
 -- (excluyendo la propia reserva que se va a reagendar)
@@ -178,4 +172,3 @@ SET
 WHERE id_reserva = 'uuid-de-la-reserva'
   AND estado NOT IN ('COMPLETADA', 'CANCELADA', 'NO_SHOW')
 RETURNING id_reserva, fecha_hora_inicio, fecha_hora_fin, estado;
-ℹ️  Después de reagendar, actualizar también el bloqueo_horario en MS-SCHEDULE: desactivar el bloqueo anterior y crear uno nuevo.
