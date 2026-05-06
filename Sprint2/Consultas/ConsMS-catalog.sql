@@ -1,7 +1,7 @@
 MS-CATALOG-SERVICE
-Tablas: categoria_servicio, servicio
-Q1. Crear Categoría de Servicio (INSERT)
-Solo un administrador puede ejecutar esta operación (controlado por RLS). El nombre es UNIQUE.
+--Tablas: categoria_servicio, servicio
+--Q1. Crear Categoría de Servicio (INSERT)
+--Solo un administrador puede ejecutar esta operación (controlado por RLS). El nombre es UNIQUE.
 SQL:
 INSERT INTO categoria_servicio (
     nombre_categoria,
@@ -13,10 +13,9 @@ INSERT INTO categoria_servicio (
     TRUE
 )
 RETURNING id_categoria, nombre_categoria, created_at;
-ℹ️  RETURNING devuelve el UUID generado automáticamente, útil para respuestas en el endpoint POST /categorias.
 
-Q2. Listar Categorías Activas (SELECT)
-Retorna todas las categorías disponibles para mostrar al usuario final o poblar un selector en el frontend.
+--Q2. Listar Categorías Activas (SELECT)
+--Retorna todas las categorías disponibles para mostrar al usuario final o poblar un selector en el frontend.
 SQL:
 SELECT
     id_categoria,
@@ -29,10 +28,9 @@ ORDER BY nombre_categoria ASC;
  
 -- Alternativa usando la vista ya definida en el DDL:
 -- SELECT * FROM vista_categorias_activas;
-ℹ️  La vista vista_categorias_activas ya aplica el filtro WHERE activa = TRUE.
 
-Q3. Actualizar Categoría (UPDATE)
-Permite modificar el nombre, descripción o estado activo de una categoría. El trigger updated_at se dispara automáticamente.
+--Q3. Actualizar Categoría (UPDATE)
+--Permite modificar el nombre, descripción o estado activo de una categoría. El trigger updated_at se dispara automáticamente.
 SQL:
 UPDATE categoria_servicio
 SET
@@ -41,10 +39,9 @@ SET
     activa           = TRUE
 WHERE id_categoria = 'uuid-de-la-categoria'
 RETURNING id_categoria, nombre_categoria, activa, updated_at;
-ℹ️  El campo updated_at se actualiza automáticamente por el trigger trigger_categoria_servicio_updated_at.
 
-Q4. Desactivar Categoría (Soft Delete)
-En lugar de eliminar físicamente, se marca activa = FALSE. Preserva la integridad referencial con proveedores ya asociados.
+--Q4. Desactivar Categoría (Soft Delete)
+--En lugar de eliminar físicamente, se marca activa = FALSE. Preserva la integridad referencial con proveedores ya asociados.
 SQL:
 UPDATE categoria_servicio
 SET activa = FALSE
@@ -55,10 +52,9 @@ RETURNING id_categoria, nombre_categoria, activa, updated_at;
 SELECT id_categoria, nombre_categoria, activa
 FROM  categoria_servicio
 WHERE id_categoria = 'uuid-de-la-categoria';
-ℹ️  No se usa DELETE para preservar el historial y evitar romper referencias lógicas desde MS-AUTH (tabla proveedor).
 
-Q5. Crear Servicio (INSERT)
-El proveedor registra un nuevo servicio. El id_proveedor es FK lógica a MS-AUTH y debe validarse con Feign Client antes de insertar.
+--Q5. Crear Servicio (INSERT)
+--El proveedor registra un nuevo servicio. El id_proveedor es FK lógica a MS-AUTH y debe validarse con Feign Client antes de insertar.
 SQL:
 INSERT INTO servicio (
     id_proveedor,
@@ -78,10 +74,9 @@ INSERT INTO servicio (
     1                 -- atención individual
 )
 RETURNING id_servicio, nombre_servicio, precio, created_at;
-ℹ️  capacidad_maxima = 1 indica servicio individual. Valores > 1 habilitarán el flujo de servicios grupales.
 
-Q6. Listar Servicios de un Proveedor (SELECT)
-Retorna todos los servicios activos de un proveedor específico. Usado por el panel del proveedor y la búsqueda del cliente.
+--Q6. Listar Servicios de un Proveedor (SELECT)
+--Retorna todos los servicios activos de un proveedor específico. Usado por el panel del proveedor y la búsqueda del cliente.
 SQL:
 SELECT
     id_servicio,
@@ -98,10 +93,9 @@ ORDER BY nombre_servicio ASC;
  
 -- Alternativa usando la función del DDL:
 -- SELECT * FROM obtener_servicios_por_proveedor('uuid-del-proveedor', TRUE);
-ℹ️  La función obtener_servicios_por_proveedor(uuid, solo_activos) acepta un segundo parámetro para incluir servicios inactivos si es necesario.
 
-Q7. Actualizar Servicio (UPDATE)
-Permite al proveedor actualizar precio, duración, descripción u otros campos de su servicio.
+--Q7. Actualizar Servicio (UPDATE)
+--Permite al proveedor actualizar precio, duración, descripción u otros campos de su servicio.
 SQL:
 UPDATE servicio
 SET
@@ -112,10 +106,9 @@ SET
 WHERE id_servicio  = 'uuid-del-servicio'
   AND id_proveedor = 'uuid-del-proveedor'   -- seguridad: solo el dueño puede modificar
 RETURNING id_servicio, nombre_servicio, precio, duracion_minutos, updated_at;
-ℹ️  El filtro AND id_proveedor = ... refuerza la regla de negocio aunque RLS ya lo controle a nivel de base de datos.
 
-Q8. Desactivar Servicio (Soft Delete)
-Marca el servicio como inactivo sin eliminarlo. Preserva el historial de reservas ya asociadas a ese servicio.
+--Q8. Desactivar Servicio (Soft Delete)
+--Marca el servicio como inactivo sin eliminarlo. Preserva el historial de reservas ya asociadas a ese servicio.
 SQL:
 -- Opción A: UPDATE directo
 UPDATE servicio
@@ -129,10 +122,9 @@ SELECT desactivar_servicio('uuid-del-servicio');
  
 -- Reactivar si es necesario:
 SELECT activar_servicio('uuid-del-servicio');
-ℹ️  La función desactivar_servicio() del DDL retorna TRUE si encontró y desactivó el registro, FALSE si ya estaba inactivo.
 
-Q9. Estadísticas de Servicios por Proveedor (Reporte)
-Reporte agregado del catálogo de un proveedor: total de servicios, activos/inactivos, precio promedio, mínimo y máximo.
+--Q9. Estadísticas de Servicios por Proveedor (Reporte)
+--Reporte agregado del catálogo de un proveedor: total de servicios, activos/inactivos, precio promedio, mínimo y máximo.
 SQL:
 SELECT
     id_proveedor,
@@ -149,4 +141,3 @@ WHERE id_proveedor = 'uuid-del-proveedor';
 -- Para todos los proveedores (vista global — solo ADMIN):
 SELECT * FROM vista_estadisticas_servicios_proveedor
 ORDER BY total_servicios DESC;
-ℹ️  La vista vista_estadisticas_servicios_proveedor ya incluye la agrupación por id_proveedor en el DDL.
